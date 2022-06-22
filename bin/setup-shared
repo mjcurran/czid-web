@@ -4,28 +4,28 @@
 gem install bundler --conservative
 
 echo "== Building docker compose config =="
-aws-oidc exec -- docker-compose build
+docker-compose build
 
 echo "== Running npm install and webpack =="
 npm install && ./node_modules/.bin/webpack --config webpack.config.dev.js
 
 echo "== Starting DB =="
-aws-oidc exec -- docker-compose up -d db
+docker compose up -d db
 sleep 10
 
 echo "== Initializing DB =="
-aws-oidc exec -- docker-compose run --rm web rake db:drop db:create db:migrate:with_data db:seed
+docker compose run --rm web rake db:drop db:create db:migrate:with_data db:seed
 
 echo "== Initializing test DB =="
-aws-oidc exec -- docker-compose run --rm -e RAILS_ENV=test web rake db:drop db:create db:migrate:with_data db:seed
+docker compose run --rm -e RAILS_ENV=test web rake db:drop db:create db:migrate:with_data db:seed
 
 echo "== Bringing up all services =="
-aws-oidc exec -- docker-compose up -d db redis web resque resque_result_monitor resque_pipeline_monitor elasticsearch
+docker compose up -d db redis web resque resque_result_monitor resque_pipeline_monitor elasticsearch
 sleep 10
 
 echo "== Creating ES indices =="
-aws-oidc exec -- docker-compose run web rake create_elasticsearch_indices
+docker compose run web rake create_elasticsearch_indices
 
 echo "== Creating ES indices for heatmap=="
-aws-oidc exec -- docker-compose run web curl -H "Content-Type: application/x-ndjson" -POST http://heatmap-elasticsearch:9200/_index_template/scored_taxon_count  --data-binary "@./docker/open_distro/index_schema.json"
-aws-oidc exec -- docker-compose run web curl -H "Content-Type: application/x-ndjson" -POST http://heatmap-elasticsearch:9200/data/_bulk --data-binary "@./docker/open_distro/es_data.json"
+docker compose run web curl -H "Content-Type: application/x-ndjson" -POST http://heatmap-elasticsearch:9200/_index_template/scored_taxon_count  --data-binary "@./docker/open_distro/index_schema.json"
+docker compose run web curl -H "Content-Type: application/x-ndjson" -POST http://heatmap-elasticsearch:9200/data/_bulk --data-binary "@./docker/open_distro/es_data.json"

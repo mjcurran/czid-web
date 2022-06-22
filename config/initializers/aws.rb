@@ -13,10 +13,11 @@ module AwsClient
     stub_responses = true
     credentials = Aws::Credentials.new("fake_access_key_id", "fake_secret_access_key")
     Aws.config.update({ credentials: credentials })
+    #Aws.config.update({endpoint: "http://localhost:9444"})
   end
 
   CLIENT_INITIALIZERS = {
-    s3: -> { Aws::S3::Client.new(stub_responses: stub_responses) },
+    s3: -> { Aws::S3::Client.new(stub_responses: stub_responses, endpoint: "http://localhost:9444/s3" ) },
     states: lambda {
       Aws::States::Client.new(
         # Default retry_limit is 3. Default retry_base_delay is 0.3 sec.
